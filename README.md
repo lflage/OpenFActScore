@@ -178,3 +178,29 @@ for fn in os.listdir(dirname):
     ))
 ```
 
+## Json File Structue
+```
+{
+  "input": "string", 
+  "output": "string", 
+  "topic": "string", 
+  "cat": ["string", "string"], 
+  "annotations": [
+    {
+      "text": "string", 
+      "is-relevant": "boolean",
+      "model-atomic-facts": [
+        {
+          "text": "string"
+        }
+      ], 
+      "human-atomic-facts": [
+        {
+          "text": "string", 
+          "label": "string"
+        }
+      ]
+    }        
+  ]
+}
+```

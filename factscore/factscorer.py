@@ -248,12 +248,23 @@ class FactScorer(object):
         for atom in atomic_facts:
             atom = atom.strip()
             if self.lm:
-                passages = self.retrieval[knowledge_source].get_passages(topic, atom, k=5)
-                definition = "Answer the question about {} based on the given context.\n\n".format(topic)
+                if isinstance(topic, str):
+                    topic = [topic]
+                passages = []
+                for tp in topic:
+                    if len(passages) > 10:
+                        continue
+                    # change K to 3 for ASQA, original 5
+                    passages.extend(self.retrieval[knowledge_source].get_passages(tp, atom, k=5))
+
+                definition = "Answer the question about {} based on the given context.\n\n".format(
+                    " ".join(topic)
+                    )
                 context = ""
                 for psg_idx, psg in enumerate(reversed(passages)):
                     context += "Title: {}\nText: {}\n\n".format(psg["title"], psg["text"].replace("<s>", "").replace("</s>", ""))
                 definition += context.strip()
+                self.logger.debug(f"definition: {definition}\ndefinition-1: {definition[-1]}")
                 if definition[-1] not in string.punctuation:
                     definition += "."
                 prompt = "{}\n\nInput: {} True or False?\nAnswer:".format(definition.strip(), atom.strip())
@@ -297,16 +308,18 @@ class FactScorer(object):
                 is_supported = True
 
             if is_supported and "npm" in self.model_name:
-                npprob = self.npm[knowledge_source].get_probabilty(topic, atom)
-                is_supported = npprob > 0.3
+                if isinstance(topic, str):
+                    npprob = self.npm[knowledge_source].get_probabilty(topic, atom)
+                    is_supported = npprob > 0.3
+                
 
             decisions.append({"atom": atom, "is_supported": is_supported})
-            # TODO: salvar as decisões do modelo
 
         if cost_estimate:
             return total_words
-        else:
-            return decisions
+        if not isinstance(decisions, list):
+            self.logger.debug("Smth wrong with %s", topic)
+        return decisions
 
 def convert_to_serializable(obj):
     if isinstance(obj, np.bool_):

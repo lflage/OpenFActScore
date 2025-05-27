@@ -209,6 +209,8 @@ class Retrieval(object):
         
         if cache_key not in self.cache:
             passages = self.db.get_text_from_title(topic)
+            if not passages:
+                return []
             if self.retrieval_type=="bm25":
                 self.cache[cache_key] = self.get_bm25_passages(topic, retrieval_query, passages, k)
             else:

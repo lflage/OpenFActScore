@@ -91,8 +91,11 @@ class NPM(LM):
         return results
 
     def get_probabilty(self, topic, question):
-        passages = self.bm25.get_passages(topic, question, k=3)
-        passages = [p["text"].strip() for p in passages]
+        passages = []
+        for top in topic:
+            cur_passages = self.bm25.get_passages(top, question, k=3)
+            cur_passages = [p["text"].strip() for p in cur_passages]
+            passages.extend(cur_passages)
         cache_key = question + "#" + "#".join(passages)
         
         if cache_key not in self.cache_dict:
